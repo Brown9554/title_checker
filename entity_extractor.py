@@ -43,20 +43,26 @@ def _save_cache(filename: str, content: str) -> None:
         pass
 
 
+def _sanitize_entity_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    if isinstance(result, dict):
+        result.pop("risk_flags", None)
+    return result
+
+
 def _build_system_prompt() -> str:
     taxonomy_text = json.dumps(TAXONOMY, indent=2)
     return (
         "You are an expert at analyzing Massachusetts registry of deeds documents.\n"
-        "Extract structured information from the provided document text and return\n"
-        "ONLY a valid JSON object with no preamble or markdown formatting.\n\n"
-        "Use this taxonomy as your source of truth for document types, states, \n"
-        "party roles, and risk flags:\n"
+        "Extract factual information directly present in the provided document text\n"
+        "and return ONLY a valid JSON object with no preamble or markdown formatting.\n\n"
+        "Use this taxonomy as your source of truth for document types, states,\n"
+        "and party roles:\n"
         f"{taxonomy_text}\n\n"
         "Return a JSON object with these fields:\n"
         "document_type, subtype, date (YYYY-MM-DD), book, page, parties \n"
         "(grantor, grantee, lender, borrower as lists), consideration (numeric),\n"
         "references (list of {book, page, type} objects for any prior documents \n"
-        "referenced), state, risk_flags, notes"
+        "referenced), state, notes"
     )
 
 
@@ -119,5 +125,6 @@ def extract_entities(raw_text: str, filename: str) -> Dict[str, Any]:
             "notes": response_text,
         }
 
-    _save_cache(filename, json.dumps(result, indent=2))
-    return result
+    sanitized_result = _sanitize_entity_result(result)
+    _save_cache(filename, json.dumps(sanitized_result, indent=2))
+    return sanitized_result
