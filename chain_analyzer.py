@@ -69,7 +69,7 @@ def _call_anthropic(entities: list[Any], taxonomy: Any, api_key: str) -> str:
     system_prompt = _build_system_prompt(taxonomy)
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=8000,
+        max_tokens=16000,
         system=system_prompt,
         messages=[
             {
